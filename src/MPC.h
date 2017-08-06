@@ -21,6 +21,7 @@ class MPC {
   vector<double> y_;
   double ref_v_;
   double latency_;
+  vector<double> prev_actuations;
 
 };
 

@@ -132,6 +132,8 @@ MPC::MPC(double ref_v, double latency) {
   y_.resize(N);
   ref_v_ = ref_v;
   latency_ = latency;
+  prev_actuations.resize(2);
+  prev_actuations.assign(2, 0);
 }
 MPC::~MPC() {}
 
@@ -195,6 +197,13 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars_upperbound[i] = 1.0;
   }
 
+  int actuations_after_delay_index=int(std::ceil(latency_ / dt));
+  for (int i=0; i < actuations_after_delay_index; i++) {
+    vars_lowerbound [delta_start + i] = prev_actuations [0];
+    vars_upperbound [delta_start + i] = prev_actuations [0];
+    vars_lowerbound [a_start + i] = prev_actuations [1];
+    vars_upperbound [a_start + i] = prev_actuations [1];
+  }
   // Lower and upper limits for the constraints
   // Should be 0 besides initial state.
   Dvector constraints_lowerbound(n_constraints);
@@ -262,8 +271,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     x_[i] = solution.x[x_start + i];
     y_[i] = solution.x[y_start + i];
   }
+  double delta=solution.x[delta_start+actuations_after_delay_index];
+  double a=solution.x[a_start+actuations_after_delay_index];
+  prev_actuations[0]=delta;
+  prev_actuations[1]=a;
   return {
-    solution.x[delta_start]/ 0.436332,
-    solution.x[a_start]};
+    delta/ 0.436332,
+    a};
           };
 
