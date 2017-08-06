@@ -1,4 +1,5 @@
 .vscode
+.xcode
 build
 tags
 .editorconfig
